@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:bloc_pattern/bloc_pattern.dart';
@@ -12,6 +13,8 @@ class SnakeBloc extends BlocBase {
   final SnakeModel snake;
 
   Direction lastDirection;
+
+  Timer walkingTimer;
 
   SnakeBloc(this.snake) {
     positionOut = position.stream;
@@ -119,33 +122,73 @@ class SnakeBloc extends BlocBase {
     switch (direction) {
       case Direction.up:
         {
-          lastDirection = Direction.up;
-          updatePosition(PositionModel(0.0, snake.height));
+          if (lastDirection != Direction.down) {
+            lastDirection = Direction.up;
+            updatePosition(PositionModel(0.0, snake.height));
+            resetWalkingTimer();
+          }
         }
         break;
       case Direction.down:
         {
-          lastDirection = Direction.down;
-          updatePosition(PositionModel(
-            0.0,
-            -snake.height,
-          ));
+          if (lastDirection != Direction.up) {
+            lastDirection = Direction.down;
+            updatePosition(PositionModel(0.0, -snake.height));
+            resetWalkingTimer();
+          }
         }
         break;
       case Direction.left:
         {
-          lastDirection = Direction.left;
-          updatePosition(PositionModel(-snake.height, 0.0));
+          if (lastDirection != Direction.right) {
+            lastDirection = Direction.left;
+            updatePosition(PositionModel(-snake.height, 0.0));
+            resetWalkingTimer();
+          }
         }
         break;
       case Direction.right:
         {
-          if (lastDirection == null) lastDirection = Direction.right;
-          updatePosition(PositionModel(snake.height, 0.0));
+          if (lastDirection != Direction.left) {
+            lastDirection = Direction.right;
+            updatePosition(PositionModel(snake.height, 0.0));
+            resetWalkingTimer();
+          }
         }
         break;
       default:
     }
+  }
+
+  void walkByTouchPosition(double touchX, double touchY) {
+    switch (lastDirection) {
+      case Direction.up:
+      case Direction.down:
+        {
+          if (touchX < position.value.first.x)
+            walking(Direction.left);
+          else if (touchX > position.value.first.x)
+            walking(Direction.right);
+        }
+        break;
+      case Direction.left:
+      case Direction.right:
+        {
+          if (touchY < position.value.first.y)
+            walking(Direction.down);
+          else if (touchY > position.value.first.y)
+            walking(Direction.up);
+        }
+        break;
+      default:
+    }
+  }
+
+  void resetWalkingTimer() {
+    if (walkingTimer != null)
+      walkingTimer.cancel();
+
+    walkingTimer = Timer.periodic(Duration(seconds: 1), (_) => walking(lastDirection));
   }
 
   @override

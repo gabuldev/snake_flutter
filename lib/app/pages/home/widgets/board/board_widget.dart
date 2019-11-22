@@ -17,40 +17,49 @@ class _BoardWidgetState extends State<BoardWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 400,
-      height: 400,
-      color: Colors.green,
-      child: Stack(
-        children: <Widget>[
-          Center(
-            child: StreamBuilder<List<FoodModel>>(
-                stream: bloc.foodOut,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return FoodWidget(
-                      foods: snapshot.data,
-                    );
-                  } else {
-                    return CircularProgressIndicator();
-                  }
-                }),
-          ),
-          Center(
-            child: StreamBuilder<List<PositionModel>>(
-                stream: bloc.positionOut,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return SnakeWidget(
-                      snake: SnakeModel(body: snapshot.data),
-                    );
-                  } else {
-                    return CircularProgressIndicator();
-                  }
-                }),
-          ),
-        ],
+    return GestureDetector(
+      onTapDown: (TapDownDetails details) => onBoardTapDown(context, details),
+      child: Container(
+        width: 400,
+        height: 400,
+        color: Colors.green,
+        child: Stack(
+          children: <Widget>[
+            Center(
+              child: StreamBuilder<List<FoodModel>>(
+                  stream: bloc.foodOut,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return FoodWidget(
+                        foods: snapshot.data,
+                      );
+                    } else {
+                      return CircularProgressIndicator();
+                    }
+                  }),
+            ),
+            Center(
+              child: StreamBuilder<List<PositionModel>>(
+                  stream: bloc.positionOut,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return SnakeWidget(
+                        snake: SnakeModel(body: snapshot.data),
+                      );
+                    } else {
+                      return CircularProgressIndicator();
+                    }
+                  }),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  void onBoardTapDown(BuildContext context, TapDownDetails details) {
+    final RenderBox box = context.findRenderObject();
+    final Offset localOffset = box.globalToLocal(details.globalPosition);
+    bloc.walkByTouchPosition(localOffset.dx, 400 - localOffset.dy);
   }
 }
